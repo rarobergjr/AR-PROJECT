@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AR Signage for Freshmen</title>
+    <!-- เรียกใช้งาน A-Frame และ MindAR Library -->
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+      /* ปุ่มเริ่มต้นกดเปิด AR/เสียง */
+      #startButton {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999;
+        padding: 12px 24px;
+        background-color: #ff5722;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        cursor: pointer;
+      }
+
+      /* แผงปุ่ม Interactive เลือกห้อง (ซ่อนไว้ก่อนจนกว่าจะกดเริ่ม) */
+      #menuButtons {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999;
+        display: none; /* เริ่มต้นให้ซ่อนไว้ */
+        gap: 10px;
+      }
+
+      .room-btn {
+        padding: 10px 16px;
+        background-color: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- ปุ่มกดเริ่มต้นใช้งาน -->
+    <button id="startButton" onclick="startAR()">แตะเพื่อเริ่มใช้งาน AR</button>
+
+    <!-- ปุ่ม Interactive สำหรับเลือกห้องต่างๆ (จะแสดงขึ้นมาหลังจากกดเริ่ม) -->
+    <div id="menuButtons">
+      <button class="room-btn" onclick="changeVideo('room1.mp4')">ห้องเลคเชร์</button>
+      <button class="room-btn" onclick="changeVideo('room2.mp4')">ห้องทะเบียน</button>
+      <button class="room-btn" onclick="changeVideo('room3.mp4')">ห้องพักอาจารย์</button>
+      <button class="room-btn" onclick="changeVideo('room3.mp4')">ห้องพักอาจารย์</button>
+    </div>
+
+    <!-- โครงสร้าง AR Scene -->
+    <a-scene mindar-image="imageTargetSrc: targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      
+      <a-assets>
+        <!-- ค่าเริ่มต้นจะเล่นวิดีโอตัวแรก (เช่น intro.mp4 หรือ room1.mp4) -->
+        <video id="arVideo" src="intro.mp4" preload="auto" crossorigin="anonymous" loop webkit-playsinline playsinline></video>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <!-- เมื่อสแกนเจอ Target ตัวที่ 0 วิดีโอจะปรากฏขึ้นมาลอยตามป้าย -->
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-video src="#arVideo" position="0 0 0" width="1" height="1.77" rotation="0 0 0"></a-video>
+      </a-entity>
+      
+    </a-scene>
+
+    <script>
+      function startAR() {
+        // ซ่อนปุ่มเริ่ม และแสดงปุ่มเลือกห้องขึ้นมา
+        document.getElementById('startButton').style.display = 'none';
+        document.getElementById('menuButtons').style.display = 'flex';
+        
+        // สั่งเล่นวิดีโอตั้งต้น
+        const video = document.getElementById('arVideo');
+        video.play();
+      }
+
+      // ฟังก์ชันสำหรับเปลี่ยนวิดีโอตามปุ่มที่นักศึกษาจิ้มเลือก
+      function changeVideo(videoFileName) {
+        const videoElement = document.getElementById('arVideo');
+        videoElement.src = videoFileName; // สลับไฟล์วิดีโอใหม่
+        videoElement.load();
+        videoElement.play(); // เล่นวิดีโอของห้องนั้นทันที
+      }
+    </script>
+  </body>
+</html>
