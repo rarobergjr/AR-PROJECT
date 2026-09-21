@@ -1,102 +1,580 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AR Signage for Freshmen</title>
-    <!-- เรียกใช้งาน A-Frame และ MindAR Library -->
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Signage - KMUTT Freshmen Guide</title>
+    
+    <!-- A-Frame & MindAR Library -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+    
     <style>
-      /* ปุ่มเริ่มต้นกดเปิด AR/เสียง */
-      #startButton {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 999;
-        padding: 12px 24px;
-        background-color: #ff5722;
-        color: white;
-        border: none;
-        border-radius: 25px;
-        font-size: 16px;
-        font-weight: bold;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        cursor: pointer;
-      }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-      /* แผงปุ่ม Interactive เลือกห้อง (ซ่อนไว้ก่อนจนกว่าจะกดเริ่ม) */
-      #menuButtons {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 999;
-        display: none; /* เริ่มต้นให้ซ่อนไว้ */
-        gap: 10px;
-      }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
 
-      .room-btn {
-        padding: 10px 16px;
-        background-color: #2196F3;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-      }
+        /* ============ MAIN BUTTON ============ */
+        #startButton {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #ff5722, #ff7043);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            box-shadow: 0 8px 16px rgba(255, 87, 34, 0.4);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        #startButton:hover {
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 12px 24px rgba(255, 87, 34, 0.6);
+        }
+
+        #startButton:active {
+            transform: translateX(-50%) scale(0.98);
+        }
+
+        /* ============ MENU CONTAINER ============ */
+        #menuContainer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 70vh;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        #menuContainer.show {
+            display: flex;
+        }
+
+        #menuContainer::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #menuContainer::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #menuContainer::-webkit-scrollbar-thumb {
+            background: rgba(255, 87, 34, 0.5);
+            border-radius: 3px;
+        }
+
+        /* ============ MENU TITLE ============ */
+        .menu-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ff5722;
+        }
+
+        /* ============ FUNCTION BUTTONS ============ */
+        .function-btn {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+        }
+
+        .function-btn:hover {
+            background: linear-gradient(135deg, #1976D2, #1565C0);
+            transform: translateX(5px);
+            box-shadow: 0 6px 12px rgba(33, 150, 243, 0.5);
+        }
+
+        .function-btn:active {
+            transform: translateX(3px);
+        }
+
+        /* ============ INFO CARD OVERLAY ============ */
+        #infoCardOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #infoCardOverlay.show {
+            display: flex;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #1e1e1e, #2d2d2d);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+            border: 2px solid #ff5722;
+            color: white;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-card::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .info-card::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .info-card::-webkit-scrollbar-thumb {
+            background: #ff5722;
+            border-radius: 3px;
+        }
+
+        /* ============ CARD HEADER ============ */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ff5722;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #ff5722;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        /* ============ CARD CONTENT ============ */
+        .card-section {
+            margin-bottom: 20px;
+        }
+
+        .section-label {
+            font-size: 12px;
+            color: #ff5722;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .section-content {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+
+        .section-content strong {
+            color: #fff;
+        }
+
+        /* ============ CONTACT BUTTONS ============ */
+        .contact-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .contact-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px;
+            background: linear-gradient(135deg, #4CAF50, #388E3C);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .contact-btn:hover {
+            background: linear-gradient(135deg, #388E3C, #2E7D32);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .contact-btn.phone {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+        }
+
+        .contact-btn.phone:hover {
+            background: linear-gradient(135deg, #1976D2, #1565C0);
+        }
+
+        .contact-btn.email {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+        }
+
+        .contact-btn.email:hover {
+            background: linear-gradient(135deg, #F57C00, #E65100);
+        }
+
+        /* ============ SERVICES LIST ============ */
+        .services-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .service-tag {
+            background: rgba(255, 87, 34, 0.2);
+            border: 1px solid #ff5722;
+            color: #ffab91;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 600px) {
+            #menuContainer {
+                width: 95%;
+                max-width: 100%;
+            }
+
+            .info-card {
+                padding: 20px;
+                max-height: 90vh;
+            }
+
+            .card-title {
+                font-size: 20px;
+            }
+
+            .contact-buttons {
+                gap: 8px;
+            }
+
+            .services-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ============ AR SCENE ============ */
+        a-scene {
+            display: none;
+        }
+
+        a-scene.ar-active {
+            display: block;
+        }
+
+        /* ============ STATUS MESSAGE ============ */
+        #statusMessage {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 500;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            border-left: 4px solid #ff5722;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        #statusMessage.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
 
-    <!-- ปุ่มกดเริ่มต้นใช้งาน -->
-    <button id="startButton" onclick="startAR()">แตะเพื่อเริ่มใช้งาน AR</button>
+    <!-- Status Message -->
+    <div id="statusMessage"></div>
 
-    <!-- ปุ่ม Interactive สำหรับเลือกห้องต่างๆ (จะแสดงขึ้นมาหลังจากกดเริ่ม) -->
-    <div id="menuButtons">
-      <button class="room-btn" onclick="changeVideo('room1.mp4')">ห้องเลคเชร์</button>
-      <button class="room-btn" onclick="changeVideo('room2.mp4')">ห้องทะเบียน</button>
-      <button class="room-btn" onclick="changeVideo('room3.mp4')">ห้องพักอาจารย์</button>
-      <button class="room-btn" onclick="changeVideo('room4.mp4')">ยืมของ</button>
+    <!-- Start Button -->
+    <button id="startButton" onclick="startAR()">
+        👁️ แตะเพื่อเริ่มใช้งาน AR
+    </button>
+
+    <!-- Menu Container -->
+    <div id="menuContainer">
+        <div class="menu-title">เลือกสิ่งที่คุณต้องการ</div>
+        <button class="function-btn" onclick="showInfoCard(0)">📚 ยืมของ MDA/MMD</button>
+        <button class="function-btn" onclick="showInfoCard(1)">📚 ยืมของ MDT</button>
+        <button class="function-btn" onclick="showInfoCard(2)">📝 บริการการศึกษา</button>
     </div>
 
-    <!-- โครงสร้าง AR Scene -->
-    <a-scene mindar-image="imageTargetSrc: targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <!-- Info Card Overlay -->
+    <div id="infoCardOverlay">
+        <div class="info-card" id="infoCard"></div>
+    </div>
+
+    <!-- AR Scene (A-Frame + MindAR) -->
+    <a-scene id="arScene" mindar-image="imageTargetSrc: targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
       
-      <a-assets>
-        <!-- ค่าเริ่มต้นจะเล่นวิดีโอตัวแรก (เช่น intro.mp4 หรือ room1.mp4) -->
-        <video id="arVideo" src="intro.mp4" preload="auto" crossorigin="anonymous" loop webkit-playsinline playsinline></video>
-      </a-assets>
+        <a-assets>
+            <video id="arVideo" src="intro.mp4" preload="auto" crossorigin="anonymous" loop webkit-playsinline playsinline></video>
+        </a-assets>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- เมื่อสแกนเจอ Target ตัวที่ 0 วิดีโอจะปรากฏขึ้นมาลอยตามป้าย -->
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-video src="#arVideo" position="0 0 0" width="1" height="1.77" rotation="0 0 0"></a-video>
-      </a-entity>
+        <a-entity mindar-image-target="targetIndex: 0">
+            <a-video src="#arVideo" position="0 0 0" width="1" height="1.77" rotation="0 0 0"></a-video>
+        </a-entity>
       
     </a-scene>
 
     <script>
-      function startAR() {
-        // ซ่อนปุ่มเริ่ม และแสดงปุ่มเลือกห้องขึ้นมา
-        document.getElementById('startButton').style.display = 'none';
-        document.getElementById('menuButtons').style.display = 'flex';
-        
-        // สั่งเล่นวิดีโอตั้งต้น
-        const video = document.getElementById('arVideo');
-        video.play();
-      }
+        // ============ DATA STRUCTURE ============
+        const functionsData = [
+            {
+                id: "borrow_mda_mmd",
+                emoji: "📚",
+                title: "ยืมของ MDA/MMD",
+                location: "ชั้น 6",
+                building: "อาคาร MDA/MMD",
+                staff: "พี่เขต",
+                phone: "02-470-7613",
+                email: "khwan@kmutt.ac.th",
+                hours: "09:00 - 16:00",
+                services: ["ยืมหนังสือ", "ยืมอุปกรณ์", "ยืมสื่อ", "ยืมเก้าอี้โต๊ะ"]
+            },
+            {
+                id: "borrow_mdt",
+                emoji: "📚",
+                title: "ยืมของ MDT",
+                location: "ชั้น 5",
+                building: "อาคาร MDT",
+                staff: "พี่ทั้ม",
+                phone: "กำลังปรึกษาหารือ",
+                email: "tham@kmutt.ac.th",
+                hours: "09:00 - 16:00",
+                services: ["ยืมหนังสือ", "ยืมอุปกรณ์", "ยืมวัสดุ"]
+            },
+            {
+                id: "education_service",
+                emoji: "📝",
+                title: "บริการการศึกษา",
+                location: "ชั้น 2 ฝั่งลิฟท์ 2 ตัว",
+                building: "อาคาร MDA/MMD",
+                staff: "พี่แก้ว",
+                phone: "02-470-7608",
+                email: "manuschanok.kah@kmutt.ac.th",
+                hours: "09:00 - 16:00",
+                services: ["ลงทะเบียน", "ยืมทุกแบบ", "ปัญหาการศึกษา", "ปรึกษา"]
+            }
+        ];
 
-      // ฟังก์ชันสำหรับเปลี่ยนวิดีโอตามปุ่มที่นักศึกษาจิ้มเลือก
-      function changeVideo(videoFileName) {
-        const videoElement = document.getElementById('arVideo');
-        videoElement.src = videoFileName; // สลับไฟล์วิดีโอใหม่
-        videoElement.load();
-        videoElement.play(); // เล่นวิดีโอของห้องนั้นทันที
-      }
+        // ============ STATE ============
+        let arActive = false;
+
+        // ============ START AR ============
+        function startAR() {
+            arActive = true;
+            document.getElementById('startButton').style.display = 'none';
+            document.getElementById('menuContainer').classList.add('show');
+            document.getElementById('arScene').classList.add('ar-active');
+            
+            // Auto-play video
+            const video = document.getElementById('arVideo');
+            video.play().catch(err => {
+                showStatus('⚠️ เล่นวิดีโอไม่สำเร็จ - แตะหน้าจออีกครั้ง');
+            });
+
+            showStatus('✨ AR พร้อมใช้งาน - ชี้กล้องไปที่ marker');
+        }
+
+        // ============ SHOW INFO CARD ============
+        function showInfoCard(index) {
+            const data = functionsData[index];
+            const card = document.getElementById('infoCard');
+
+            let servicesHTML = '';
+            if (data.services && data.services.length > 0) {
+                servicesHTML = `
+                    <div class="card-section">
+                        <div class="section-label">บริการที่มี</div>
+                        <div class="services-list">
+                            ${data.services.map(s => `<div class="service-tag">${s}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <h2 class="card-title">${data.emoji} ${data.title}</h2>
+                    <button class="close-btn" onclick="closeInfoCard()">✕</button>
+                </div>
+
+                <div class="card-section">
+                    <div class="section-label">📍 ตำแหน่ง</div>
+                    <div class="section-content">
+                        <strong>${data.location}</strong><br>
+                        ${data.building}
+                    </div>
+                </div>
+
+                <div class="card-section">
+                    <div class="section-label">👤 ผู้ดูแล</div>
+                    <div class="section-content">${data.staff}</div>
+                </div>
+
+                <div class="card-section">
+                    <div class="section-label">⏰ เวลาเปิด-ปิด</div>
+                    <div class="section-content">${data.hours}</div>
+                </div>
+
+                <div class="card-section">
+                    <div class="section-label">📞 ติดต่อ</div>
+                    <div class="contact-buttons">
+                        ${data.phone !== 'กำลังปรึกษาหารือ' ? 
+                            `<a href="tel:${data.phone}" class="contact-btn phone">📱 โทร</a>` 
+                            : `<span style="font-size: 13px; color: #ff9800;">⏳ ${data.phone}</span>`
+                        }
+                        <a href="mailto:${data.email}" class="contact-btn email">✉️ อีเมล</a>
+                    </div>
+                </div>
+
+                ${servicesHTML}
+
+                <div class="card-section" style="margin-top: 30px; padding-top: 15px; border-top: 2px solid rgba(255, 87, 34, 0.3);">
+                    <p style="font-size: 12px; color: #999; text-align: center;">
+                        💡 อยากดูวิดีโอแนะนำ? <br> กำลังเตรียมอยู่ครับ
+                    </p>
+                </div>
+            `;
+
+            document.getElementById('infoCardOverlay').classList.add('show');
+        }
+
+        // ============ CLOSE INFO CARD ============
+        function closeInfoCard() {
+            document.getElementById('infoCardOverlay').classList.remove('show');
+        }
+
+        // ============ SHOW STATUS ============
+        function showStatus(message) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.classList.add('show');
+            
+            setTimeout(() => {
+                statusEl.classList.remove('show');
+            }, 4000);
+        }
+
+        // ============ CLOSE OVERLAY ON BACKGROUND CLICK ============
+        document.getElementById('infoCardOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeInfoCard();
+            }
+        });
+
+        // ============ HANDLE ORIENTATION PERMISSION ============
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if device supports DeviceOrientation
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                // iOS 13+ requires permission
+                // showStatus('ให้สิทธิ์การเข้าถึงเซนเซอร์สำหรับ AR');
+            }
+        });
+
+        // ============ KEYBOARD CLOSE ============
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeInfoCard();
+            }
+        });
     </script>
-  </body>
+
+</body>
 </html>
